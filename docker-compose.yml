@@ -1,0 +1,34 @@
+version: "3"
+services:
+  node-app:
+    container_name: destip-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - ${PORT}:${PORT} # host_port:container_port
+    volumes:
+      - ./:/app # bind mount -> sync local folder to container folder
+      - notused:/app/node_modules # dont touch node_modules when syncing
+    environment:
+      - DB_HOST=mariadb # use internal service name as hostname
+      - DB_PORT=3306 # use always 3306 when in container
+      - DB_USER=root
+    env_file:
+      - ./.env
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:11.1.2
+    container_name: destip-database
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASS}
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d
+      - database-data:/var/lib/mysql
+
+volumes:
+  database-data:
+  notused:
